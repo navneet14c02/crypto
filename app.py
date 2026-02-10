@@ -1,65 +1,54 @@
-import flet as ft
+import streamlit as st
 
-def main(page: ft.Page):
-    page.title = "Taxi App Prototype"
-    page.theme_mode = ft.ThemeMode.LIGHT
-    page.window_width = 380
-    page.window_height = 700
-    page.scroll = "auto"
+# Page Configuration
+st.set_page_config(page_title="Taxi App Prototype", page_icon="🚖")
 
-    # UI Elements
-    pickup = ft.TextField(label="Pickup Location", prefix_icon=ft.icons.LOCATION_ON, border_color="yellow700")
-    drop = ft.TextField(label="Where to?", prefix_icon=ft.icons.STREETVIEW, border_color="black")
-    
-    # Ride Selection
-    ride_type = ft.RadioGroup(content=ft.Row([
-        ft.Radio(value="Bike", label="Bike (₹5/km)"),
-        ft.Radio(value="Car", label="Car (₹12/km)"),
-    ]))
+# Title and Design
+st.title("🚖 Desi Ride Booking")
+st.markdown("### *Ola/Rapido Jaisa Prototype*")
 
-    result_text = ft.Text("", size=18, weight="bold", color="green")
+# 1. User Input Section
+col1, col2 = st.columns(2)
+with col1:
+    pickup = st.text_input("📍 Pickup Location", placeholder="Kahan se?")
+with col2:
+    drop = st.text_input("🏁 Drop Location", placeholder="Kahan jana hai?")
 
-    def book_ride(e):
-        if not pickup.value or not drop.value or not ride_type.value:
-            result_text.value = "Please fill all details!"
-            result_text.color = "red"
+# 2. Vehicle Selection
+st.write("---")
+st.subheader("Gaadi Select Karein")
+vehicle_type = st.radio(
+    "Choose your ride:",
+    ["🏍️ Bike (₹5/km)", "🚗 Car (₹12/km)", "🛺 Auto (₹8/km)"],
+    horizontal=True
+)
+
+# 3. Booking Logic
+if st.button("🚖 BOOK NOW", type="primary", use_container_width=True):
+    if not pickup or not drop:
+        st.error("Kripya Pickup aur Drop location dono bharein!")
+    else:
+        # Dummy Logic for Calculation
+        distance = 12  # Maan lete hain 12 km door hai
+        
+        # Rate nikalna
+        if "Bike" in vehicle_type:
+            rate = 5
+        elif "Car" in vehicle_type:
+            rate = 12
         else:
-            # Simple Logic: Maan lete hain distance 10km hai
-            distance = 10 
-            rate = 5 if ride_type.value == "Bike" else 12
-            fare = distance * rate
-            result_text.value = f"Ride Booked! Total Fare: ₹{fare}"
-            result_text.color = "green"
-        page.update()
+            rate = 8
+            
+        total_fare = distance * rate
+        
+        # Success Message
+        st.balloons()
+        st.success(f"✅ Booking Confirmed!")
+        st.info(f"🛣️ Distance: {distance} km\n💰 Total Fare: ₹{total_fare}")
+        st.write(f"Driver is on the way to **{pickup}**...")
 
-    # Layout
-    page.add(
-        ft.Container(
-            content=ft.Text("MY TAXI APP", size=30, weight="bold", color="black"),
-            bgcolor="yellow700",
-            padding=20,
-            alignment=ft.alignment.center,
-        ),
-        ft.Column([
-            ft.Text("Book your ride now", size=20, weight="w500"),
-            pickup,
-            drop,
-            ft.Text("Select Vehicle:"),
-            ride_type,
-            ft.ElevatedButton(
-                "BOOK NOW", 
-                on_pressed=book_ride,
-                style=ft.ButtonStyle(
-                    color="white",
-                    bgcolor="black",
-                    shape=ft.RoundedRectangleBorder(radius=10),
-                ),
-                width=400,
-                height=50
-            ),
-            ft.Divider(),
-            result_text
-        ], spacing=20, padding=20)
-    )
-
-ft.app(target=main)
+# Sidebar for extra info
+with st.sidebar:
+    st.header("Driver Status")
+    st.write("🟢 5 Drivers Nearby")
+    st.map() # Ye ek dummy map dikhayega
