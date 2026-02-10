@@ -4,7 +4,7 @@ import streamlit as st
 st.set_page_config(page_title="Taxi App Prototype", page_icon="🚖")
 
 # Title and Design
-st.title("🚖 Desi Ride Booking")
+st.title("🚖 Mera Sarthi Booking")
 st.markdown("### *Ola/Rapido Jaisa Prototype*")
 
 # 1. User Input Section
