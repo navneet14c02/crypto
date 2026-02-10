@@ -1,72 +1,65 @@
-import streamlit as st
-import google.generativeai as genai
-from dhanhq import dhanhq
-import time
+import flet as ft
 
-# --- PAGE SETUP ---
-st.set_page_config(page_title="AI SMC Trader", layout="wide")
-st.title("?? AI Smart Money Trading Dashboard")
+def main(page: ft.Page):
+    page.title = "Taxi App Prototype"
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.window_width = 380
+    page.window_height = 700
+    page.scroll = "auto"
 
-# --- SIDEBAR (Keys & Config) ---
-st.sidebar.header("API Settings")
-gemini_key = st.sidebar.text_input("Gemini API Key", type="password")
-dhan_client = st.sidebar.text_input("Dhan Client ID", value="1109282855")
-dhan_token = st.sidebar.text_input("Dhan Access Token", type="password")
+    # UI Elements
+    pickup = ft.TextField(label="Pickup Location", prefix_icon=ft.icons.LOCATION_ON, border_color="yellow700")
+    drop = ft.TextField(label="Where to?", prefix_icon=ft.icons.STREETVIEW, border_color="black")
+    
+    # Ride Selection
+    ride_type = ft.RadioGroup(content=ft.Row([
+        ft.Radio(value="Bike", label="Bike (₹5/km)"),
+        ft.Radio(value="Car", label="Car (₹12/km)"),
+    ]))
 
-# --- STRATEGY CONTEXT (From your SMC Files) ---
-smc_context = """
-Strategy: SMC (Smart Money Concepts)
-Rules: 
-1. Look for HTF POI.
-2. Wait for LTF ChoCh (Change of Character).
-3. Identify Order Block with Imbalance.
-4. Entry on retest of OB/FVG.
-"""
+    result_text = ft.Text("", size=18, weight="bold", color="green")
 
-# --- MAIN INTERFACE ---
-col1, col2 = st.columns([1, 2])
+    def book_ride(e):
+        if not pickup.value or not drop.value or not ride_type.value:
+            result_text.value = "Please fill all details!"
+            result_text.color = "red"
+        else:
+            # Simple Logic: Maan lete hain distance 10km hai
+            distance = 10 
+            rate = 5 if ride_type.value == "Bike" else 12
+            fare = distance * rate
+            result_text.value = f"Ride Booked! Total Fare: ₹{fare}"
+            result_text.color = "green"
+        page.update()
 
-with col1:
-    st.subheader("Market Selection")
-    symbol = st.selectbox("Select Index/Stock", ["NIFTY 50", "BANK NIFTY", "RELIANCE", "BTC-USDT"])
-    run_bot = st.button("Start AI Bot")
+    # Layout
+    page.add(
+        ft.Container(
+            content=ft.Text("MY TAXI APP", size=30, weight="bold", color="black"),
+            bgcolor="yellow700",
+            padding=20,
+            alignment=ft.alignment.center,
+        ),
+        ft.Column([
+            ft.Text("Book your ride now", size=20, weight="w500"),
+            pickup,
+            drop,
+            ft.Text("Select Vehicle:"),
+            ride_type,
+            ft.ElevatedButton(
+                "BOOK NOW", 
+                on_pressed=book_ride,
+                style=ft.ButtonStyle(
+                    color="white",
+                    bgcolor="black",
+                    shape=ft.RoundedRectangleBorder(radius=10),
+                ),
+                width=400,
+                height=50
+            ),
+            ft.Divider(),
+            result_text
+        ], spacing=20, padding=20)
+    )
 
-with col2:
-    st.subheader("Live AI Analysis & Signals")
-    status_box = st.empty()
-    signal_history = st.container()
-
-# --- LOGIC ---
-if run_bot:
-    if not gemini_key or not dhan_token:
-        st.error("Please enter API keys in the sidebar!")
-    else:
-        # Initialize APIs
-        genai.configure(api_key=gemini_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        dhan = dhanhq(dhan_client, dhan_token)
-        
-        st.info(f"Monitoring {symbol} using SMC Strategy...")
-        
-        while True:
-            try:
-                # 1. Fetch Price
-                data = dhan.get_ltp({"symbol": symbol})
-                price = data['data']['last_price']
-                
-                # 2. Gemini Analysis
-                prompt = f"{smc_context}\nLive Price: {price}\nAction required? (Reply 'ALERT: BUY/SELL' or 'WAIT')"
-                response = model.generate_content(prompt)
-                res_text = response.text.strip()
-                
-                # 3. Display Signal
-                status_box.metric(label=f"Current {symbol} Price", value=price)
-                
-                if "WAIT" not in res_text.upper():
-                    signal_history.success(f"?? {res_text} at {time.strftime('%H:%M:%S')}")
-                    # Yahan aap dhan.place_order() call kar sakte hain auto-trade ke liye
-                
-                time.sleep(10) # Refresh rate
-            except Exception as e:
-                st.error(f"Error: {e}")
-                break
+ft.app(target=main)
