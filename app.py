@@ -5,7 +5,7 @@ st.set_page_config(page_title="Taxi App Prototype", page_icon="🚖")
 
 # Title and Design
 st.title("🚖 Mera Sarthi Booking")
-st.markdown("### *Ola/Rapido Jaisa Prototype*")
+st.markdown("### *MERA SATHI*")
 
 # 1. User Input Section
 col1, col2 = st.columns(2)
